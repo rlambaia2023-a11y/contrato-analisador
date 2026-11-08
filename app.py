@@ -1,7 +1,8 @@
 import os
 import io
 from flask import Flask, request, render_template, send_file, flash, redirect, url_for, jsonify
-import fitz  # PyMuPDF
+from pdfminer.high_level import extract_text
+
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -37,20 +38,9 @@ def extract_text_and_logo(pdf_path):
     """Extrai todo o texto do PDF e devolve a primeira imagem (logo) caso exista.
     Retorna (texto:str, logo_bytes:bytes ou None).
     """
-    doc = fitz.open(pdf_path)
-    full_text = []
-    logo_bytes = None
-    for page_num in range(doc.page_count):
-        page = doc.load_page(page_num)
-        full_text.append(page.get_text())
-        if page_num == 0 and not logo_bytes:
-            # tenta extrair a primeira imagem da primeira página
-            imglist = page.get_images(full=True)
-            if imglist:
-                xref = imglist[0][0]
-                base_image = doc.extract_image(xref)
-                logo_bytes = base_image["image"]
-    return "\n".join(full_text), logo_bytes
+    # Usando pdfminer.six para extrair texto; logo não é extraído.
+    text = extract_text(pdf_path)
+    return text, None
 
 def analyze_contract(text: str) -> list:
     """Analisa o texto do contrato e devolve uma lista de *issue* dictionaries.
