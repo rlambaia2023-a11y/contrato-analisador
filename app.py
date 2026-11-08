@@ -137,5 +137,12 @@ def index():
         return send_file(report_path, as_attachment=True, download_name=report_name)
     return render_template('index.html')
 
+import os
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use the port provided by the hosting environment (Railway sets $PORT).
+    # Default to 5000 for local development.
+    port = int(os.getenv('PORT', 5000))
+    # Disable debug mode in production; can be overridden with an env var if needed.
+    debug_mode = os.getenv('FLASK_DEBUG', '0') == '1'
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
