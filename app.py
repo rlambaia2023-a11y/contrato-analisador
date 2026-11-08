@@ -1,14 +1,19 @@
 import os
 import io
-from flask import Flask, request, render_template, send_file, flash, redirect, url_for
+from flask import Flask, request, render_template, send_file, flash, redirect, url_for, jsonify
 import fitz  # PyMuPDF
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 
+VERSION = "1.1.0"
+
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
-app.secret_key = 'replace-with-a-secure-key'
+# Em produção, defina SECRET_KEY nas variáveis da Railway.
+# Sem ela, gera uma chave aleatória por processo (sessoes/flash so valem
+# dentro do mesmo processo; com 1 worker do gunicorn isso funciona).
+app.secret_key = os.environ.get('SECRET_KEY') or os.urandom(24)
 
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
 REPORT_FOLDER = os.path.join(os.getcwd(), 'reports')
@@ -110,6 +115,11 @@ def generate_report(issues, logo_bytes=None):
     c.save()
     buffer.seek(0)
     return buffer
+
+@app.route('/health')
+def health():
+    return jsonify({"status": "ok", "version": VERSION})
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
